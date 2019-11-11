@@ -17,6 +17,9 @@ public class TodoList {
     @OneToMany(cascade = CascadeType.ALL,
             mappedBy = "todoList", orphanRemoval = true)
     private Collection<Todo> todos;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public String getName() {
         return name;
@@ -32,5 +35,13 @@ public class TodoList {
 
     public void setTodos(Collection<Todo> todos) {
         this.todos = todos;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

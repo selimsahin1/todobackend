@@ -1,10 +1,11 @@
-package com.example.todobackend.api.controller;
+package com.example.todobackend.controller;
 
 import com.example.todobackend.database.entity.Item;
 import com.example.todobackend.database.entity.Todo;
 import com.example.todobackend.database.repository.ItemRepository;
 import com.example.todobackend.database.repository.TodoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -19,6 +20,7 @@ public class ItemController {
     @Autowired
     TodoRepository todoRepository;
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/createItem")
     public Item createNewItem(@RequestParam("itemName") String itemName, @RequestParam("todoId") long todoId) {
 
@@ -31,6 +33,7 @@ public class ItemController {
         return item;
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/editItem")
     public Item editItem(@RequestParam("itemId") long itemId, @RequestParam("itemDescription") String itemDescription, @RequestParam("itemDeadLine") String itemDeadLine, @RequestParam("itemStatus") Integer itemStatus) {
         Item item = itemRepository.getById(itemId);
