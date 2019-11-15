@@ -33,7 +33,6 @@ public class User
     private String username;
 
     @NaturalId
-    @NotBlank
     @Size(max = 40)
     @Email
     private String email;

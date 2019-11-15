@@ -1,8 +1,12 @@
 package com.example.todobackend.controller;
 
+import com.example.todobackend.Request.CreateTodoListRequest;
+import com.example.todobackend.Request.DeleteTodoListRequest;
+import com.example.todobackend.database.entity.Todo;
 import com.example.todobackend.database.entity.TodoList;
 import com.example.todobackend.database.entity.User;
 import com.example.todobackend.database.repository.TodoListRepository;
+import com.example.todobackend.database.repository.TodoRepository;
 import com.example.todobackend.database.repository.UserRepository;
 import com.example.todobackend.manager.UserManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping("/todoList")
@@ -21,33 +26,51 @@ public class TodoListController {
     TodoListRepository todoListRepository;
 
     @Autowired
+    TodoRepository todoRepository;
+
+    @Autowired
     private UserManager userManager;
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/createTodoList")
-    public TodoList createTodoList(@RequestParam("todoListName") String todoListName) {
+    public String createTodoList(@RequestBody CreateTodoListRequest createTodoListRequest) {
         User user = userManager.getUserFromSecurityContext();
         TodoList todoList = new TodoList();
-        todoList.setName(todoListName);
+        todoList.setName(createTodoListRequest.getTodoListName());
         todoList.setUser(user);
-        todoListRepository.save(todoList);
 
-        return todoList;
+        if (createTodoListRequest.getTodoListName() == null || createTodoListRequest.getTodoListName().equals(""))
+            return "Send todo list name";
+        else
+            todoListRepository.save(todoList);
+
+        return "TodoList Created";
     }
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/getAllTodoLists")
-    public Collection<TodoList> getTodoLists() {
-        return todoListRepository.findAll();
+    public List<TodoList> getTodoLists() {
+        User user = userManager.getUserFromSecurityContext();
+
+        return todoListRepository.findAllByUser(user);
     }
 
     @PreAuthorize("hasRole('USER')")
-    @DeleteMapping(value = "/deleteTodoList/{id}")
-    public ResponseEntity<Long> deletePost(@PathVariable Long id) {
+    @PostMapping(value = "/deleteTodoList")
+    public ResponseEntity<Long> deletePost(@RequestBody DeleteTodoListRequest deleteTodoListRequest) {
 
-        todoListRepository.deleteById(id);
+        TodoList todoList = todoListRepository.getById(deleteTodoListRequest.getTodoListId());
 
-        return new ResponseEntity<>(id, HttpStatus.OK);
+        List<Todo> todos = todoRepository.findAllByTodoList(todoList);
+
+        for (Todo todo : todos
+        ) {
+            todoRepository.delete(todo);
+        }
+
+        todoListRepository.delete(todoList);
+
+        return new ResponseEntity<>(deleteTodoListRequest.getTodoListId(), HttpStatus.OK);
     }
 
 }
